@@ -31,6 +31,9 @@ jobs:
         run: python fetch_wind.py
 
       - name: Force Push to Data Branch
+        env:
+          # Inject the built-in temporary token into the environment
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # 1. Configure Git bot identity so it doesn't spam your personal commit graph
           git config user.name "github-actions[bot]"
@@ -47,4 +50,4 @@ jobs:
           git commit -m "Automated NOAA GFS Update: $(date -u)"
           
           # 5. Force push using the default secure connection (No token required)
-          git push -f origin data-branch
+          git push -v -f origin data-branch
