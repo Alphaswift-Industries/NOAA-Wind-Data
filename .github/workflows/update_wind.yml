@@ -1,0 +1,50 @@
+name: NOAA Wind Fetcher
+
+on:
+  schedule:
+    # Runs at 04:30, 10:30, 16:30, and 22:30 UTC
+    - cron: '30 4,10,16,22 * * *'
+  workflow_dispatch: # Allows you to manually trigger it for testing
+
+jobs:
+  fetch-and-process:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to push to the repo
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install System Dependencies (For GRIB parsing)
+        run: sudo apt-get install -y libeccodes0
+
+      - name: Install Python Libraries
+        run: pip install requests xarray cfgrib numpy
+
+      - name: Run Data Pipeline
+        run: python fetch_wind.py
+
+      - name: Force Push to Data Branch
+        run: |
+          # 1. Configure Git bot identity so it doesn't spam your personal commit graph
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 2. Create a parallel universe branch with NO history
+          git checkout --orphan data-branch
+          
+          # 3. Delete everything from this branch EXCEPT the new public_data folder
+          git rm -rf .
+          git add public_data/
+          
+          # 4. Make the single commit
+          git commit -m "Automated NOAA GFS Update: $(date -u)"
+          
+          # 5. Force push using the default secure connection (No token required)
+          git push -f origin data-branch
