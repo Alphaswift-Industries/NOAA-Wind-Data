@@ -2,12 +2,12 @@ import requests
 import time
 import os
 import json
-from datetime import datetime, timedelta
+import datetime
 import xarray as xr
 
 # 1. Calculate the latest available NOAA Cycle
 # We subtract 4 hours from the current UTC time because NOAA takes ~4 hours to publish
-now = datetime.now(datetime.timezone.utc) - timedelta(hours=4)
+now = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=4)
 cycle_hour = (now.hour // 6) * 6
 date_str = now.strftime("%Y%m%d")
 cycle_str = f"{cycle_hour:02d}"
